@@ -5,46 +5,62 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] float movementSpeed = 1;
-    [SerializeField] float turnSpeed = 5;
-
+    [SerializeField] float movementSpeed = 1;      
     [SerializeField] Animator animator;
 
+
+    GameObject repairTarget;
+    GameObject openTarget;
+
+    Rigidbody rb;
     GameManager gameManager;
     // Start is called before the first frame update
     void Awake()
     {
         GameObject start = GameObject.FindWithTag("StartPosition");
-        transform.position = start.transform.position;
         gameManager = FindObjectOfType<GameManager>();
+        rb = GetComponent<Rigidbody>();
+        rb.position = start.transform.position;
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
 
-        Vector3 movement = new Vector3 (horizontal, 0, vertical) * Time.deltaTime * movementSpeed;
-
-        transform.position = transform.position + movement;
-        float facing = 0f;
-        
-        if(horizontal < 0)
+        if(Mathf.Abs(horizontal) > 0 || Mathf.Abs(vertical) > 0)
         {
-            facing = 180f;
+            animator.SetTrigger("RunTrigger");
+            Vector3 movement = new Vector3 (horizontal, 0, vertical) * Time.deltaTime * movementSpeed;
+            rb.rotation = Quaternion.LookRotation(movement);
+            rb.MovePosition(transform.position + movement);
+            rb.velocity = Vector3.zero;
         }
         else
         {
-            facing = 0f;
+            Debug.Log("Idle");
+            animator.SetTrigger("IdleTrigger");
         }
-        
-        Quaternion target = Quaternion.Euler(0, facing, 0);
-        transform.rotation = Quaternion.Slerp(transform.rotation, target, Time.deltaTime * turnSpeed);
 
-        if (Input.GetKeyDown(KeyCode.Space))
+
+
+        //Quaternion target = Quaternion.Euler(0, facing, 0);
+        //transform.rotation = Quaternion.Slerp(transform.rotation, target, Time.deltaTime * turnSpeed);
+
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetButtonDown("Fire1"))
         {
-            animator.Play("Attack");
+
+            //gameManager.SwitchPlayer();
+            if(repairTarget != null)
+            {
+                repairTarget.GetComponent<Repairable>().ToggleState();
+            }
+            if(openTarget != null)
+            {
+                openTarget.GetComponent<Interact>().InteractWith();
+            }
+
 
         }
 
@@ -68,7 +84,7 @@ public class PlayerController : MonoBehaviour
         {
             camera.OnTargetObjectWarped(transform, newPosition - transform.position);
         }
-        transform.position = newPosition;
+        rb.position = newPosition;
         
     }
 
@@ -76,12 +92,32 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        if (other.gameObject.CompareTag("RepairTarget"))
+        {
+            repairTarget = other.gameObject;
+        }
 
-        Interact interact = other.GetComponent<Interact>();
-        Debug.Log("Collided");
-        if(interact != null)
-        {            
-            interact.InteractWith();
+        if (other.gameObject.CompareTag("Openable"))
+        {
+            openTarget = other.gameObject;
+        }
+
+        //Interact interact = other.GetComponent<Interact>();
+        //Debug.Log("Collided");
+        //if(interact != null)
+        //{            
+        //    interact.InteractWith();
+        //}
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.gameObject.CompareTag("RepairTarget"))
+        {
+            repairTarget = null;
+        }
+        if (other.gameObject.CompareTag("Openable"))
+        {
+            openTarget = null;
         }
     }
 }

@@ -8,6 +8,10 @@ public class GameManager : MonoBehaviour
     
     [SerializeField] [Range(0f, 1f)] float fadeSpeed = 1f; 
     [SerializeField] GameObject fadePanel;
+    [SerializeField] GameObject playerKnight;
+    [SerializeField] GameObject playerZombie;
+    [SerializeField] Cinemachine.CinemachineVirtualCamera vCamera;
+    bool zombie = false;
     Material fadeMaterial;
 
     public event EventHandler Faded;
@@ -68,5 +72,28 @@ public class GameManager : MonoBehaviour
         c.a = 0f;
         fadeMaterial.color = c;
         Debug.Log("Faded back in");
+    }
+
+    internal void SwitchPlayer()
+    {
+        Debug.Log("Swapping");
+        if (zombie)
+        {
+            Vector3 position = playerZombie.transform.position;
+            playerZombie.SetActive(false);
+            playerKnight.SetActive(true);
+            playerKnight.transform.position = position;
+            vCamera.Follow = playerKnight.transform;
+            zombie = false;
+        }
+        else
+        {
+            Vector3 posistion = playerKnight.transform.position;
+            playerZombie.SetActive(true);
+            playerKnight.SetActive(false);
+            playerZombie.transform.position = posistion;
+            vCamera.Follow = playerZombie.transform;
+            zombie = true;
+        }
     }
 }
