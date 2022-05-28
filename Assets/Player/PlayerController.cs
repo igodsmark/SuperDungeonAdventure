@@ -26,20 +26,28 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
-
-        if(Mathf.Abs(horizontal) > 0 || Mathf.Abs(vertical) > 0)
+        if (gameManager.CanMove)
         {
-            animator.SetTrigger("RunTrigger");
-            Vector3 movement = new Vector3 (horizontal, 0, vertical) * Time.deltaTime * movementSpeed;
-            rb.rotation = Quaternion.LookRotation(movement);
-            rb.MovePosition(transform.position + movement);
-            rb.velocity = Vector3.zero;
+            if(Mathf.Abs(horizontal) > 0 || Mathf.Abs(vertical) > 0)
+            {
+
+                animator.SetTrigger("RunTrigger");
+                Vector3 movement = new Vector3 (horizontal, 0, vertical) * Time.deltaTime * movementSpeed;
+                rb.rotation = Quaternion.LookRotation(movement);
+                rb.MovePosition(transform.position + movement);
+                rb.velocity = Vector3.zero;
+            }
+            else
+            {            
+                animator.SetTrigger("IdleTrigger");
+            }
+
         }
         else
         {
-            Debug.Log("Idle");
             animator.SetTrigger("IdleTrigger");
         }
 
@@ -48,7 +56,7 @@ public class PlayerController : MonoBehaviour
         //Quaternion target = Quaternion.Euler(0, facing, 0);
         //transform.rotation = Quaternion.Slerp(transform.rotation, target, Time.deltaTime * turnSpeed);
 
-        if (Input.GetKeyDown(KeyCode.Space) || Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Fire1"))
         {
 
             //gameManager.SwitchPlayer();
@@ -100,6 +108,12 @@ public class PlayerController : MonoBehaviour
         if (other.gameObject.CompareTag("Openable"))
         {
             openTarget = other.gameObject;
+        }
+
+        if (other.gameObject.CompareTag("Pickup"))
+        {
+
+            other.GetComponent<Pickup>()?.PickUpItem();
         }
 
         //Interact interact = other.GetComponent<Interact>();

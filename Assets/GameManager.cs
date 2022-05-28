@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -10,15 +11,43 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject fadePanel;
     [SerializeField] GameObject playerKnight;
     [SerializeField] GameObject playerZombie;
+    [SerializeField] int gold = 0;
     [SerializeField] Cinemachine.CinemachineVirtualCamera vCamera;
+    [SerializeField] TMPro.TMP_Text scoreUI;
+    [SerializeField] GameObject textPrefab;
+    [SerializeField] int goldThreshold = 50;
+    [SerializeField] GameObject menu;
+    public bool CanMove { get { return canMove; } }
+    bool canMove = true;
+    bool isMenuDisplayed = false;
+
     bool zombie = false;
     Material fadeMaterial;
 
     public event EventHandler Faded;
+    public event EventHandler SwitchGameMode;
+
+    private void Awake()
+    {
+        UpdateScore();
+        menu.SetActive(false);
+    }
+
+
+    private void UpdateScore()
+    {
+        scoreUI.text = "Gold: " + gold;
+    }
 
     protected virtual void OnFaded(EventArgs e)
     {
         EventHandler handler = Faded;
+        handler?.Invoke(this, e);
+    }
+
+    protected virtual void OnSwitchGameMode(EventArgs e)
+    {
+        EventHandler handler = SwitchGameMode;
         handler?.Invoke(this, e);
     }
 
@@ -31,11 +60,27 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (Input.GetButtonDown("Cancel"))
+        {
+            
+            if (isMenuDisplayed)
+            {                
+                menu.SetActive(false);
+                canMove = true;
+                isMenuDisplayed = false;
+            }
+            else
+            {                
+                menu.SetActive(true);
+                canMove=false;
+                isMenuDisplayed=true;
+            }
+        }
     }
 
     public void FadeOut()
     {
+        canMove = false;
         StartCoroutine(CoFadeOut());
     }
 
@@ -71,7 +116,7 @@ public class GameManager : MonoBehaviour
         }
         c.a = 0f;
         fadeMaterial.color = c;
-        Debug.Log("Faded back in");
+        canMove = true;
     }
 
     internal void SwitchPlayer()
@@ -95,5 +140,27 @@ public class GameManager : MonoBehaviour
             vCamera.Follow = playerZombie.transform;
             zombie = true;
         }
+    }
+
+    public void AddGold(int goldAmount)
+    {
+        gold += goldAmount;
+        UpdateScore();
+        if(gold > goldThreshold)
+        {
+            Zombify();
+        }
+    }
+
+    public void DisplayText(Vector3 position, string text)
+    {
+        GameObject textHolder = Instantiate(textPrefab, position, Quaternion.identity);
+        textHolder.transform.GetChild(0).GetComponent<TextMeshPro>().SetText(text);
+    }
+
+    public void Zombify()
+    {
+        SwitchPlayer();
+        SwitchGameMode?.Invoke(this, EventArgs.Empty);
     }
 }

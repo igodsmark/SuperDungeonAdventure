@@ -2,14 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Gold))]
 public class Pickup : MonoBehaviour
 {
-    [SerializeField] float goldValue = 3f;
+    [SerializeField] int goldValue = 5;
     // Start is called before the first frame update
 
-    public float PickUpItem()
+    public void PickUpItem()
     {
         gameObject.SetActive(false);
-        return goldValue;
+        if(goldValue > 0)
+        {
+            GetComponent<Gold>().AddGold(goldValue);
+            goldValue = 0;
+
+        }
     }
 }
