@@ -38,6 +38,7 @@ public class Teleporter : MonoBehaviour
     void Faded(object sender, EventArgs args)
     {
         teleportee.GetComponent<PlayerController>().TeleportTo(destination.transform.position);
+        
         gameManager.FadeIn();
     }
 

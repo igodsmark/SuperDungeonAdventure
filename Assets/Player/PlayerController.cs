@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(MovementController))]
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] float movementSpeed = 1;      
@@ -14,6 +15,7 @@ public class PlayerController : MonoBehaviour
 
     Rigidbody rb;
     GameManager gameManager;
+    MovementController moveController;
     // Start is called before the first frame update
     void Awake()
     {
@@ -21,6 +23,7 @@ public class PlayerController : MonoBehaviour
         gameManager = FindObjectOfType<GameManager>();
         rb = GetComponent<Rigidbody>();
         rb.position = start.transform.position;
+        moveController = GetComponent<MovementController>();
     }
 
     // Update is called once per frame
@@ -35,9 +38,8 @@ public class PlayerController : MonoBehaviour
             {
 
                 animator.SetTrigger("RunTrigger");
-                Vector3 movement = new Vector3 (horizontal, 0, vertical) * Time.deltaTime * movementSpeed;
-                rb.rotation = Quaternion.LookRotation(movement);
-                rb.MovePosition(transform.position + movement);
+                Vector3 movement = new Vector3 (horizontal, 0, vertical);
+                moveController.MoveRB(rb, movement, movementSpeed);
                 rb.velocity = Vector3.zero;
             }
             else
@@ -60,11 +62,11 @@ public class PlayerController : MonoBehaviour
         {
 
             //gameManager.SwitchPlayer();
-            if(repairTarget != null)
+            if(repairTarget != null && !gameManager.IsLooting)
             {
                 repairTarget.GetComponent<Repairable>().ToggleState();
             }
-            if(openTarget != null)
+            if(openTarget != null && gameManager.IsLooting)
             {
                 openTarget.GetComponent<Interact>().InteractWith();
             }
@@ -93,6 +95,7 @@ public class PlayerController : MonoBehaviour
             camera.OnTargetObjectWarped(transform, newPosition - transform.position);
         }
         rb.position = newPosition;
+        gameManager.Teleported(newPosition);
         
     }
 

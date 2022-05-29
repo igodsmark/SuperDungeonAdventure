@@ -11,28 +11,67 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject fadePanel;
     [SerializeField] GameObject playerKnight;
     [SerializeField] GameObject playerZombie;
+    [SerializeField] GameObject necromancer;
+    [SerializeField] float necromancerDelay = 10f;
     [SerializeField] int gold = 0;
     [SerializeField] Cinemachine.CinemachineVirtualCamera vCamera;
     [SerializeField] TMPro.TMP_Text scoreUI;
     [SerializeField] GameObject textPrefab;
     [SerializeField] int goldThreshold = 50;
     [SerializeField] GameObject menu;
+    [SerializeField] Dialogue dialogue;
+    [SerializeField] SFXPlayer sfxPlayer;
+    [SerializeField] EventManager eventManager;
+
+    [SerializeField] float movementFactor = 1f;
+
+    bool isLooting = true;
+    public bool IsLooting { get { return isLooting; } }
+    public float MovementFactor { get { return movementFactor; }  }
+
+    Necromancer necroBrain;
     public bool CanMove { get { return canMove; } }
     bool canMove = true;
     bool isMenuDisplayed = false;
 
+
     bool zombie = false;
     Material fadeMaterial;
+    bool necroActive = false;
 
     public event EventHandler Faded;
-    public event EventHandler SwitchGameMode;
+    //public event EventHandler SwitchGameMode;
+
+    
+
+    public void Teleported(Vector3 destination)
+    {
+        Debug.Log("Teleported player to: " + destination);
+        necroBrain.SetLastKnown(destination);
+    }
+
 
     private void Awake()
     {
+        canMove = false;
         UpdateScore();
         menu.SetActive(false);
+        necroBrain = necromancer.GetComponent<Necromancer>();
+        eventManager.FinishedText += Dialogue_FinishedText;
+        DisplayIntroText();
     }
 
+    private void DisplayIntroText()
+    {
+        List<string> text = new List<string>() { "Find the treasure!", "Avoid the Necromancer!" };
+        DisplayDialogue(text);
+    }
+
+    private void Dialogue_FinishedText(object sender, EventArgs e)
+    {
+        canMove = true;
+        movementFactor = 1f;
+    }
 
     private void UpdateScore()
     {
@@ -45,10 +84,21 @@ public class GameManager : MonoBehaviour
         handler?.Invoke(this, e);
     }
 
-    protected virtual void OnSwitchGameMode(EventArgs e)
+    //protected virtual void OnSwitchGameMode(EventArgs e)
+    //{
+    //    EventHandler handler = SwitchGameMode;
+    //    handler?.Invoke(this, e);
+    //}
+
+    internal void TriggerPlayerSwitch()
     {
-        EventHandler handler = SwitchGameMode;
-        handler?.Invoke(this, e);
+        eventManager.FinishedText += PlayerSwitch;
+    }
+
+    private void PlayerSwitch(object sender, EventArgs e)
+    {
+        eventManager.FinishedText -= PlayerSwitch;
+        SwitchPlayer();
     }
 
     // Start is called before the first frame update
@@ -103,7 +153,8 @@ public class GameManager : MonoBehaviour
         }
         c.a = 1f;
         fadeMaterial.color = c;
-        Faded?.Invoke(this, EventArgs.Empty);
+        OnFaded(EventArgs.Empty);
+        //Faded?.Invoke(this, EventArgs.Empty);
     }
     IEnumerator CoFadeIn()
     {
@@ -121,7 +172,7 @@ public class GameManager : MonoBehaviour
 
     internal void SwitchPlayer()
     {
-        Debug.Log("Swapping");
+        
         if (zombie)
         {
             Vector3 position = playerZombie.transform.position;
@@ -140,16 +191,20 @@ public class GameManager : MonoBehaviour
             vCamera.Follow = playerZombie.transform;
             zombie = true;
         }
+        isLooting = !isLooting;
+        eventManager.SwitchedGameMode();
+        
     }
 
     public void AddGold(int goldAmount)
     {
         gold += goldAmount;
         UpdateScore();
-        if(gold > goldThreshold)
-        {
-            Zombify();
-        }
+        sfxPlayer.PickupCoins();
+        //if(gold > goldThreshold)
+        //{
+        //    Zombify();
+        //}
     }
 
     public void DisplayText(Vector3 position, string text)
@@ -161,6 +216,20 @@ public class GameManager : MonoBehaviour
     public void Zombify()
     {
         SwitchPlayer();
-        SwitchGameMode?.Invoke(this, EventArgs.Empty);
+        eventManager.SwitchedGameMode();
     }
+
+    public void DisplayDialogue(List<string> messages)
+    {
+        movementFactor = 0f;
+        dialogue.DisplayDialogue(messages);
+    }
+
+    public void DisplayDialogue(string message)
+    {
+        movementFactor = 0f;
+        dialogue.DisplayDialogue(new List<string> { message });
+    }
+
+    
 }

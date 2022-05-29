@@ -19,7 +19,7 @@ public class Sparkle : MonoBehaviour
             particles.Stop();
 
         }
-        FindObjectOfType<GameManager>().SwitchGameMode += Sparkle_SwitchGameMode;
+        FindObjectOfType<EventManager>().SwitchGameMode += Sparkle_SwitchGameMode;
     }
 
     private void Sparkle_SwitchGameMode(object sender, System.EventArgs e)
