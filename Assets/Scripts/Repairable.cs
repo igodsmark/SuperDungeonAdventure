@@ -17,6 +17,19 @@ public class Repairable : MonoBehaviour
         }
     }
 
+    public bool Repair()
+    {
+        if (broken)
+        {
+            brokenState.SetActive(false);
+            repairedState.SetActive(true);
+            broken = false;
+            return true;
+        }
+        return false;
+
+    }
+
     public void ToggleState()
     {
         if (broken)

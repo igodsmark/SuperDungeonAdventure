@@ -15,6 +15,9 @@ public class Necromancer : MonoBehaviour
     [SerializeField] GameObject model;
     [SerializeField] GameManager gameManager;
     [SerializeField] EventManager eventManager;
+    [SerializeField] float spawnSpace = 2f;
+
+    float minWaitTime = 3f;
 
     bool isActive = false;
     bool chasing = false;
@@ -88,10 +91,15 @@ public class Necromancer : MonoBehaviour
                         displayedChase = true;
                         eventManager.StartChase();
                     }
-                    transform.position = lastKnownDestination;
-                    chasing = true;
-                    chaseTimer = 0f;
-                    model.SetActive(true);
+                    //Don't trigger directly on top of player
+                    if (Vector3.Distance(lastKnownDestination, player.transform.position) > spawnSpace)
+                    {
+                        transform.position = lastKnownDestination;
+                        chasing = true;
+                        chaseTimer = 0f;
+                        model.SetActive(true);
+
+                    }
                 }
                 //animator.SetTrigger("IdleTrigger");
             }
@@ -118,7 +126,10 @@ public class Necromancer : MonoBehaviour
         if (displayedChase)
         {
             walkSpeed += accelerator;
-            waitTime -= accelerator;
+            if(waitTime >= minWaitTime)
+            {
+                waitTime -= accelerator;
+            }
         }
     }
 

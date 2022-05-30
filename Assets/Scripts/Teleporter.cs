@@ -19,13 +19,18 @@ public class Teleporter : MonoBehaviour
     private void OnTriggerEnter(Collider collision)
     {
         Debug.Log("Collided");
+        
         if (collision.transform.CompareTag("Player"))
         {
+            if (!gameManager.Teleporting)
+            {
+                //Teleport player (screenfade)
+                gameManager.SetTeleporting(true);
+                gameManager.FadeOut();
+                gameManager.Faded += Faded;
+                teleportee = collision.gameObject;
+            }
             
-            //Teleport player (screenfade)
-            gameManager.FadeOut();
-            gameManager.Faded += Faded;
-            teleportee = collision.gameObject;
 
         }
         else
@@ -38,7 +43,7 @@ public class Teleporter : MonoBehaviour
     void Faded(object sender, EventArgs args)
     {
         teleportee.GetComponent<PlayerController>().TeleportTo(destination.transform.position);
-        
+        gameManager.Faded -= Faded;
         gameManager.FadeIn();
     }
 

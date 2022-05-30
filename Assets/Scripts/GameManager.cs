@@ -22,8 +22,17 @@ public class GameManager : MonoBehaviour
     [SerializeField] Dialogue dialogue;
     [SerializeField] SFXPlayer sfxPlayer;
     [SerializeField] EventManager eventManager;
+    [SerializeField] GameObject winScreen;
 
     [SerializeField] float movementFactor = 1f;
+
+    bool teleporting = false;
+    public bool Teleporting { get { return teleporting; } }
+    public void SetTeleporting(bool teleport)
+    {
+        teleporting = teleport;
+    }
+    int jobsLeft = 0;
 
     bool isLooting = true;
     public bool IsLooting { get { return isLooting; } }
@@ -48,6 +57,9 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Teleported player to: " + destination);
         necroBrain.SetLastKnown(destination);
+        canMove = true;
+        teleporting = false;
+        movementFactor = 1f;
     }
 
 
@@ -69,14 +81,30 @@ public class GameManager : MonoBehaviour
 
     private void Dialogue_FinishedText(object sender, EventArgs e)
     {
+        
         canMove = true;
         movementFactor = 1f;
+
+
     }
 
     private void UpdateScore()
     {
-        scoreUI.text = "Gold: " + gold;
+        if (IsLooting)
+        {
+            scoreUI.text = "Gold: " + gold;
+        }
     }
+
+    public void SetTasks(int tasks)
+    {
+        scoreUI.text = "Jobs left: " + tasks;
+        if(tasks <= 0)
+        {
+            winScreen.SetActive(true);
+        }
+    }
+
 
     protected virtual void OnFaded(EventArgs e)
     {
@@ -117,6 +145,7 @@ public class GameManager : MonoBehaviour
             {                
                 menu.SetActive(false);
                 canMove = true;
+                
                 isMenuDisplayed = false;
             }
             else
@@ -131,6 +160,8 @@ public class GameManager : MonoBehaviour
     public void FadeOut()
     {
         canMove = false;
+        movementFactor = 0f;
+        
         StartCoroutine(CoFadeOut());
     }
 
@@ -168,6 +199,7 @@ public class GameManager : MonoBehaviour
         c.a = 0f;
         fadeMaterial.color = c;
         canMove = true;
+        teleporting = false;
     }
 
     internal void SwitchPlayer()

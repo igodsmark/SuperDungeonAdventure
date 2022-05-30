@@ -49,6 +49,7 @@ public class Dialogue : MonoBehaviour
 
     public void DisplayDialogue(List<string> text)
     {
+        displayText = true;
         messages = text;
         DisplayNextLine();
     }
@@ -64,6 +65,7 @@ public class Dialogue : MonoBehaviour
         }
         else
         {
+            displayText = false;
             dialogueHolder.SetActive(false);
             messageIndex = 0;
             messages.Clear();

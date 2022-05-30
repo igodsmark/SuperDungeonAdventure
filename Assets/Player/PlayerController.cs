@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
 
     GameObject repairTarget;
     GameObject openTarget;
+    Tidying tidying;
 
     Rigidbody rb;
     GameManager gameManager;
@@ -24,6 +25,7 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rb.position = start.transform.position;
         moveController = GetComponent<MovementController>();
+        tidying = GetComponent<Tidying>();
     }
 
     // Update is called once per frame
@@ -64,7 +66,11 @@ public class PlayerController : MonoBehaviour
             //gameManager.SwitchPlayer();
             if(repairTarget != null && !gameManager.IsLooting)
             {
-                repairTarget.GetComponent<Repairable>().ToggleState();
+                bool repaired = repairTarget.GetComponent<Repairable>().Repair();
+                if (repaired)
+                {
+                    tidying.Tidied();
+                }
             }
             if(openTarget != null && gameManager.IsLooting)
             {
@@ -94,7 +100,10 @@ public class PlayerController : MonoBehaviour
         {
             camera.OnTargetObjectWarped(transform, newPosition - transform.position);
         }
-        rb.position = newPosition;
+
+        transform.position = newPosition;
+        
+        Debug.Log($"Teleported {gameObject.name} to {newPosition}, RB coords {rb.position}");
         gameManager.Teleported(newPosition);
         
     }
